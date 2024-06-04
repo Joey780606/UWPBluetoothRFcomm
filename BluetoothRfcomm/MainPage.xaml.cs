@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Devices.Enumeration;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
@@ -24,6 +26,9 @@ using Windows.UI.Xaml.Navigation;
  * 1. 
  *   a. DisplayHelpers.cs, Styles.xaml needs to add at first.
  *   b. MainPage.xaml some click function is empty.
+ * 2.
+ *   a. Mainly I join DeviceWatcherHelper.cs
+ *   b. Adjust some code.
  */
 namespace BluetoothRfcomm
 {
@@ -42,6 +47,53 @@ namespace BluetoothRfcomm
         {
             this.InitializeComponent();
             Current = this;
+            deviceWatcherHelper = new DeviceWatcherHelper(resultCollection, Dispatcher);
+            deviceWatcherHelper.DeviceChanged += OnDeviceListChanged;
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            resultsListView.ItemsSource = resultCollection;
+
+            selectorComboBox.ItemsSource = DeviceSelectorChoices.PairingSelectors;
+            selectorComboBox.SelectedIndex = 0;
+            Debug.WriteLine("Joey: OnNavigatedTo in");
+        }
+
+        private void OnDeviceListChanged(DeviceWatcher sender, string id)
+        {
+            // If the item being updated is currently "selected", then update the pairing buttons
+            DeviceInformationDisplay selectedDeviceInfoDisp = (DeviceInformationDisplay)resultsListView.SelectedItem;
+            if ((selectedDeviceInfoDisp != null) && (selectedDeviceInfoDisp.Id == id))
+            {
+                UpdatePairingButtons();
+            }
+        }
+
+        private void UpdatePairingButtons()
+        {
+            DeviceInformationDisplay deviceInfoDisp = (DeviceInformationDisplay)resultsListView.SelectedItem;
+
+            if (null != deviceInfoDisp &&
+                deviceInfoDisp.DeviceInformation.Pairing.CanPair &&
+                !deviceInfoDisp.DeviceInformation.Pairing.IsPaired)
+            {
+                pairButton.IsEnabled = true;
+            }
+            else
+            {
+                pairButton.IsEnabled = false;
+            }
+
+            if (null != deviceInfoDisp &&
+                deviceInfoDisp.DeviceInformation.Pairing.IsPaired)
+            {
+                unpairButton.IsEnabled = true;
+            }
+            else
+            {
+                unpairButton.IsEnabled = false;
+            }
         }
 
         /// <summary>
