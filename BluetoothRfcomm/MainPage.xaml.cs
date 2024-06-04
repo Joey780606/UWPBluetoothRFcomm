@@ -15,6 +15,13 @@ using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
+/*
+ * Author: Joey yang
+ * Note:
+ * 1. 
+ *   a. DisplayHelpers.cs, Styles.xaml needs to add at first.
+ *   b. MainPage.xaml some click function is empty.
+ */
 namespace BluetoothRfcomm
 {
     /// <summary>
@@ -25,6 +32,26 @@ namespace BluetoothRfcomm
         public MainPage()
         {
             this.InitializeComponent();
+        }
+
+        private void StartWatcherButton_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void StopWatcherButton_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void PairButton_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void UnpairButton_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void ResultsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
         }
     }
 }
