@@ -57,7 +57,7 @@ namespace BluetoothRfcomm
         {
             resultsListView.ItemsSource = resultCollection;
 
-            selectorComboBox.ItemsSource = DeviceSelectorChoices.PairingSelectors;
+            selectorComboBox.ItemsSource = DeviceSelectorChoices.PairingSelectors;  //Joey: 只要存這個就好
             selectorComboBox.SelectedIndex = 0;
             Debug.WriteLine("Joey: OnNavigatedTo in");  // It is work.
         }
@@ -225,7 +225,9 @@ namespace BluetoothRfcomm
 
             // Get the device selector chosen by the UI then add additional constraints for devices that
             // can be paired or are already paired.
-            DeviceSelectorInfo deviceSelectorInfo = (DeviceSelectorInfo)selectorComboBox.SelectedItem;
+            DeviceSelectorInfo deviceSelectorInfo = (DeviceSelectorInfo)selectorComboBox.SelectedItem;  //Joey: 這個要指定
+           // DeviceSelectorInfo deviceSelectorInfo = (DeviceSelectorInfo)DeviceSelectorChoices.Bluetooth;
+            
             string selector = "(" + deviceSelectorInfo.Selector + ")" + " AND (System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
 
             DeviceWatcher deviceWatcher;
