@@ -38,6 +38,7 @@ namespace BluetoothRfcomm
     public sealed partial class MainPage : Page
     {
         public static MainPage Current;
+        private MainPage rootPage;
 
         private DeviceWatcherHelper deviceWatcherHelper;
 
@@ -47,6 +48,7 @@ namespace BluetoothRfcomm
         {
             this.InitializeComponent();
             Current = this;
+            rootPage = MainPage.Current;
             deviceWatcherHelper = new DeviceWatcherHelper(resultCollection, Dispatcher);
             deviceWatcherHelper.DeviceChanged += OnDeviceListChanged;
         }
@@ -57,7 +59,12 @@ namespace BluetoothRfcomm
 
             selectorComboBox.ItemsSource = DeviceSelectorChoices.PairingSelectors;
             selectorComboBox.SelectedIndex = 0;
-            Debug.WriteLine("Joey: OnNavigatedTo in");
+            Debug.WriteLine("Joey: OnNavigatedTo in");  // It is work.
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)  // Joey: 離開此頁
+        {
+            deviceWatcherHelper.Reset();
         }
 
         private void OnDeviceListChanged(DeviceWatcher sender, string id)
@@ -159,22 +166,98 @@ namespace BluetoothRfcomm
 
         private void StartWatcherButton_Click(object sender, RoutedEventArgs e)
         {
+            StartWatcher();
         }
 
         private void StopWatcherButton_Click(object sender, RoutedEventArgs e)
         {
+            StopWatcher();
         }
 
-        private void PairButton_Click(object sender, RoutedEventArgs e)
+        private async void PairButton_Click(object sender, RoutedEventArgs e)
         {
+            // Gray out the pair button and results view while pairing is in progress.
+            resultsListView.IsEnabled = false;
+            pairButton.IsEnabled = false;
+            rootPage.NotifyUser("Pairing started. Please wait...", NotifyType.StatusMessage);
+
+            DeviceInformationDisplay deviceInfoDisp = resultsListView.SelectedItem as DeviceInformationDisplay;
+
+            DevicePairingResult dpr = await deviceInfoDisp.DeviceInformation.Pairing.PairAsync();
+
+            rootPage.NotifyUser(
+                "Pairing result = " + dpr.Status.ToString(),
+                dpr.Status == DevicePairingResultStatus.Paired ? NotifyType.StatusMessage : NotifyType.ErrorMessage);
+
+            UpdatePairingButtons();
+            resultsListView.IsEnabled = true;
         }
 
-        private void UnpairButton_Click(object sender, RoutedEventArgs e)
+        private async void UnpairButton_Click(object sender, RoutedEventArgs e)
         {
+            // Gray out the unpair button and results view while unpairing is in progress.
+            resultsListView.IsEnabled = false;
+            unpairButton.IsEnabled = false;
+            rootPage.NotifyUser("Unpairing started. Please wait...", NotifyType.StatusMessage);
+
+            DeviceInformationDisplay deviceInfoDisp = resultsListView.SelectedItem as DeviceInformationDisplay;
+
+            DeviceUnpairingResult dupr = await deviceInfoDisp.DeviceInformation.Pairing.UnpairAsync();
+
+            rootPage.NotifyUser(
+                "Unpairing result = " + dupr.Status.ToString(),
+                dupr.Status == DeviceUnpairingResultStatus.Unpaired ? NotifyType.StatusMessage : NotifyType.ErrorMessage);
+
+            UpdatePairingButtons();
+            resultsListView.IsEnabled = true;
         }
 
         private void ResultsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //Joey: 結果列的其中一筆被點選時要做的事
+            UpdatePairingButtons();
+        }
+
+        private void StartWatcher()
+        {
+            startWatcherButton.IsEnabled = false;
+            resultCollection.Clear();
+
+            // Get the device selector chosen by the UI then add additional constraints for devices that
+            // can be paired or are already paired.
+            DeviceSelectorInfo deviceSelectorInfo = (DeviceSelectorInfo)selectorComboBox.SelectedItem;
+            string selector = "(" + deviceSelectorInfo.Selector + ")" + " AND (System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
+
+            DeviceWatcher deviceWatcher;
+            if (deviceSelectorInfo.Kind == DeviceInformationKind.Unknown)
+            {
+                // Kind will be determined by the selector
+                deviceWatcher = DeviceInformation.CreateWatcher(
+                    selector,
+                    null // don't request additional properties for this sample
+                    );
+            }
+            else
+            {
+                // Kind is specified in the selector info
+                deviceWatcher = DeviceInformation.CreateWatcher(
+                    selector,
+                    null, // don't request additional properties for this sample
+                    deviceSelectorInfo.Kind);
+            }
+
+            rootPage.NotifyUser("Starting Watcher...", NotifyType.StatusMessage);
+            deviceWatcherHelper.StartWatcher(deviceWatcher);
+            stopWatcherButton.IsEnabled = true;
+        }
+
+        private void StopWatcher()
+        {
+            stopWatcherButton.IsEnabled = false;
+
+            deviceWatcherHelper.StopWatcher();
+
+            startWatcherButton.IsEnabled = true;
         }
     }
 }
