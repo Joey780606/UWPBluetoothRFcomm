@@ -29,6 +29,9 @@ using Windows.UI.Xaml.Navigation;
  * 2.
  *   a. Mainly I join DeviceWatcherHelper.cs
  *   b. Adjust some code.
+ *   
+ * 了解專案內容的知識
+ * 1. ResultsListViewTemplate 是顯示Scan到的bluetooth裝置UI配置
  */
 namespace BluetoothRfcomm
 {
@@ -49,15 +52,15 @@ namespace BluetoothRfcomm
             this.InitializeComponent();
             Current = this;
             rootPage = MainPage.Current;
-            deviceWatcherHelper = new DeviceWatcherHelper(resultCollection, Dispatcher);
-            deviceWatcherHelper.DeviceChanged += OnDeviceListChanged;
+            deviceWatcherHelper = new DeviceWatcherHelper(resultCollection, Dispatcher); //Joey: Dispatcher傳過去的目的,是為了要做UI的變化
+            deviceWatcherHelper.DeviceChanged += OnDeviceListChanged;  //DeviceWatcherHelper有幾個函式都會引發要不要pair的UI按鍵變化
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            resultsListView.ItemsSource = resultCollection;
+            resultsListView.ItemsSource = resultCollection; //resultsListView : UI, ListView
 
-            selectorComboBox.ItemsSource = DeviceSelectorChoices.PairingSelectors;  //Joey: 只要存這個就好
+            selectorComboBox.ItemsSource = DeviceSelectorChoices.PairingSelectors;  //Joey: 只要存這個就好,這對我不太需要,因為只要Bluetooth類型
             selectorComboBox.SelectedIndex = 0;
             Debug.WriteLine("Joey: OnNavigatedTo in");  // It is work.
         }
@@ -77,7 +80,7 @@ namespace BluetoothRfcomm
             }
         }
 
-        private void UpdatePairingButtons()
+        private void UpdatePairingButtons() //Joey 看點取的 DeviceInformationDisplay 資料,有無配對來改變按鍵畫面
         {
             DeviceInformationDisplay deviceInfoDisp = (DeviceInformationDisplay)resultsListView.SelectedItem;
 
@@ -113,17 +116,17 @@ namespace BluetoothRfcomm
         {
             // If called from the UI thread, then update immediately.
             // Otherwise, schedule a task on the UI thread to perform the update.
-            if (Dispatcher.HasThreadAccess)
+            if (Dispatcher.HasThreadAccess) //Joey: 我猜是在前景
             {
                 UpdateStatus(strMessage, type);
             }
             else
             {
-                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateStatus(strMessage, type));
+                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateStatus(strMessage, type)); //Joey: 我猜是在後景
             }
         }
 
-        private void UpdateStatus(string strMessage, NotifyType type)
+        private void UpdateStatus(string strMessage, NotifyType type)   //改變status bar的顏色
         {
             switch (type)
             {
@@ -151,7 +154,7 @@ namespace BluetoothRfcomm
             }
 
             // Raise an event if necessary to enable a screen reader to announce the status update.
-            var peer = FrameworkElementAutomationPeer.FromElement(StatusBlock);
+            var peer = FrameworkElementAutomationPeer.FromElement(StatusBlock); //Joey: 這個不懂
             if (peer != null)
             {
                 peer.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
@@ -166,12 +169,12 @@ namespace BluetoothRfcomm
 
         private void StartWatcherButton_Click(object sender, RoutedEventArgs e)
         {
-            StartWatcher();
+            StartWatcher(); //UI
         }
 
         private void StopWatcherButton_Click(object sender, RoutedEventArgs e)
         {
-            StopWatcher();
+            StopWatcher();  //UI
         }
 
         private async void PairButton_Click(object sender, RoutedEventArgs e)
@@ -183,7 +186,7 @@ namespace BluetoothRfcomm
 
             DeviceInformationDisplay deviceInfoDisp = resultsListView.SelectedItem as DeviceInformationDisplay;
 
-            DevicePairingResult dpr = await deviceInfoDisp.DeviceInformation.Pairing.PairAsync();
+            DevicePairingResult dpr = await deviceInfoDisp.DeviceInformation.Pairing.PairAsync();   //Joey: 真正進行配對的工作
 
             rootPage.NotifyUser(
                 "Pairing result = " + dpr.Status.ToString(),
@@ -202,7 +205,7 @@ namespace BluetoothRfcomm
 
             DeviceInformationDisplay deviceInfoDisp = resultsListView.SelectedItem as DeviceInformationDisplay;
 
-            DeviceUnpairingResult dupr = await deviceInfoDisp.DeviceInformation.Pairing.UnpairAsync();
+            DeviceUnpairingResult dupr = await deviceInfoDisp.DeviceInformation.Pairing.UnpairAsync();  // Joey: 真正進行Unpair的動作
 
             rootPage.NotifyUser(
                 "Unpairing result = " + dupr.Status.ToString(),

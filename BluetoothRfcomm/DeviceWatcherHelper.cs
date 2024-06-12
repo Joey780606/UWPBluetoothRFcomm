@@ -2,11 +2,17 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.UI.Core;
-
+ 
+/*
+ * 知識:
+ * 1. DeviceWatcher 是Windows class
+ * 2. 定義event前,須先定義委派(delegate)的型別,參自研文件的[event]
+ */
 namespace BluetoothRfcomm
 {
     class DeviceWatcherHelper
@@ -19,7 +25,7 @@ namespace BluetoothRfcomm
             this.dispatcher = dispatcher;
         }
 
-        public delegate void DeviceChangedHandler(DeviceWatcher deviceWatcher, string id);
+        public delegate void DeviceChangedHandler(DeviceWatcher deviceWatcher, string id);  //表示要帶一個devicewatcher (可能是scan,連線,或斷線之類的)
         public event DeviceChangedHandler DeviceChanged;
 
         public DeviceWatcher DeviceWatcher => deviceWatcher;
@@ -103,10 +109,10 @@ namespace BluetoothRfcomm
         private async void Watcher_DeviceUpdated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
         {
             // Since we have the collection databound to a UI element, we need to update the collection on the UI thread.
-            await dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            await dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>  //Joey: 做UI的變動
             {
                 // Watcher may have stopped while we were waiting for our chance to run.
-                if (IsWatcherStarted(sender))
+                if (IsWatcherStarted(sender))   //Joey: sendor 是 DeviceWatcher 變數,系統內建的
                 {
                     // Find the corresponding updated DeviceInformation in the collection and pass the update object
                     // to the Update method of the existing DeviceInformation. This automatically updates the object

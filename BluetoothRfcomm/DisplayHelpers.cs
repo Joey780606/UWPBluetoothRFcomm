@@ -249,7 +249,7 @@ namespace BluetoothRfcomm
         }
 
         public DeviceInformationKind Kind => DeviceInformation.Kind;
-        public string Id => DeviceInformation.Id;
+        public string Id => DeviceInformation.Id;   //Joey: 這裡是放device ID
         public string Name => DeviceInformation.Name;
         public BitmapImage GlyphBitmapImage { get; private set; }
         public bool CanPair => DeviceInformation.Pairing.CanPair;
